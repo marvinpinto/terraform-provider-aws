@@ -32,7 +32,7 @@ func TestAccAwsLexBotAlias(t *testing.T) {
 					// user provided attributes
 					resource.TestCheckResourceAttr(resourceName, "description", "Testing lex bot alias create."),
 					resource.TestCheckResourceAttr(resourceName, "bot_name", testBotID),
-					resource.TestCheckResourceAttr(resourceName, "bot_version", lexVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", "$LATEST"),
 					resource.TestCheckResourceAttr(resourceName, "name", testBotAliasID),
 
 					// computed attributes
@@ -51,7 +51,7 @@ func TestAccAwsLexBotAlias(t *testing.T) {
 					// user updated attributes
 					resource.TestCheckResourceAttr(resourceName, "description", "Testing lex bot alias update."),
 					resource.TestCheckResourceAttr(resourceName, "bot_name", testBotID),
-					resource.TestCheckResourceAttr(resourceName, "bot_version", lexVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", "$LATEST"),
 					resource.TestCheckResourceAttr(resourceName, "name", testBotAliasID),
 
 					// computed attributes

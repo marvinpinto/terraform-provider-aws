@@ -26,19 +26,19 @@ resource "aws_lex_bot_alias" "order_flowers_prod" {
 
 The following arguments are supported:
 
-* `bot_name` _(**Required**, Type: string, Min: 1, Max: 100, Regex: \^([A-Za-z]\_?)+$)_:
+* `bot_name` _(**Required**)_:
 
 	The name of the bot.
 
-* `bot_version` _(**Required**, Type: string, Min: 1, Max: 64, Regex: \$LATEST|[0-9]+)_:
+* `bot_version` _(**Required**)_:
 
 	The name of the bot.
 
-* `description` _(Optional, Type: string, Min: 0, Max: 200)_:
+* `description` _(Optional)_:
 
 	A description of the alias.
 
-* `name` _(**Required**, Type: string, Min: 1, Max: 100, Regex: \^([A-Za-z]\_?)+$)_:
+* `name` _(**Required**)_:
 
 	The name of the alias. The name is not case sensitive.
 
@@ -46,6 +46,7 @@ The following arguments are supported:
 
 The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
 
+* `update` - (Defaults to 5 mins) Used when updating the bot alias
 * `delete` - (Defaults to 5 mins) Used when deleting the bot alias
 
 ## Attributes Reference

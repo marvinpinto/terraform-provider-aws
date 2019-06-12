@@ -25,7 +25,8 @@ func resourceAwsLexBotAlias() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Delete: schema.DefaultTimeout(lexBotAliasDeleteRetryTimeoutMinutes * time.Minute),
+			Update: schema.DefaultTimeout(time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -34,16 +35,16 @@ func resourceAwsLexBotAlias() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(lexBotNameMinLength, lexBotNameMaxLength),
-					validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
+					validation.StringLenBetween(2, 50),
+					validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
 				),
 			},
 			"bot_version": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(lexVersionMinLength, lexVersionMaxLength),
-					validation.StringMatch(regexp.MustCompile(lexVersionRegex), ""),
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
 				),
 			},
 			"checksum": {
@@ -54,15 +55,15 @@ func resourceAwsLexBotAlias() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "",
-				ValidateFunc: validation.StringLenBetween(lexDescriptionMinLength, lexDescriptionMaxLength),
+				ValidateFunc: validation.StringLenBetween(0, 200),
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(lexNameMinLength, lexNameMaxLength),
-					validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
+					validation.StringLenBetween(1, 100),
+					validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
 				),
 			},
 		},
@@ -78,8 +79,6 @@ func resourceAwsLexBotAliasCreate(d *schema.ResourceData, meta interface{}) erro
 		BotVersion: aws.String(d.Get("bot_version").(string)),
 		Name:       aws.String(name),
 	}
-
-	// optional attributes
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
@@ -101,13 +100,12 @@ func resourceAwsLexBotAliasRead(d *schema.ResourceData, meta interface{}) error 
 		BotName: aws.String(d.Get("bot_name").(string)),
 		Name:    aws.String(d.Id()),
 	})
+	if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] Bot alias (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] Bot alias (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-
 		return fmt.Errorf("error getting bot alias %s: %s", d.Id(), err)
 	}
 
@@ -130,14 +128,21 @@ func resourceAwsLexBotAliasUpdate(d *schema.ResourceData, meta interface{}) erro
 		Name:       aws.String(d.Id()),
 	}
 
-	// optional attributes
-
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	_, err := RetryOnAwsCodes([]string{lexmodelbuildingservice.ErrCodeConflictException}, func() (interface{}, error) {
-		return conn.PutBotAlias(input)
+	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		_, err := conn.PutBotAlias(input)
+
+		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+			return resource.RetryableError(fmt.Errorf("%q: bot alias still updating", d.Id()))
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
 	})
 	if err != nil {
 		return fmt.Errorf("error updating bot alias %s: %s", d.Id(), err)
@@ -152,18 +157,27 @@ func resourceAwsLexBotAliasDelete(d *schema.ResourceData, meta interface{}) erro
 	botName := d.Get("bot_name").(string)
 	name := d.Get("name").(string)
 
-	_, err := RetryOnAwsCodes([]string{lexmodelbuildingservice.ErrCodeConflictException}, func() (interface{}, error) {
-		return conn.DeleteBotAlias(&lexmodelbuildingservice.DeleteBotAliasInput{
+	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		_, err := conn.DeleteBotAlias(&lexmodelbuildingservice.DeleteBotAliasInput{
 			BotName: aws.String(botName),
 			Name:    aws.String(name),
 		})
+
+		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+			return resource.RetryableError(fmt.Errorf("%q: bot alias still deleting", d.Id()))
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("error deleteing bot alias %s: %s", d.Id(), err)
+		return fmt.Errorf("error deleting bot alias %s: %s", d.Id(), err)
 	}
 
-	// Ensure the bot alias is actually deleted before moving on. This avoids issues with deleting bots that have
-	// associated bot aliases.
+	// Ensure the bot alias is actually deleted before moving on. This avoids issues with deleting
+	// bots that have associated bot aliases.
 
 	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{

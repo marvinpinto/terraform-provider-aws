@@ -19,8 +19,8 @@ func dataSourceAwsLexBotAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(lexBotNameMinLength, lexBotNameMaxLength),
-					validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
+					validation.StringLenBetween(2, 50),
+					validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
 				),
 			},
 			"bot_version": {
@@ -47,8 +47,8 @@ func dataSourceAwsLexBotAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(lexNameMinLength, lexNameMaxLength),
-					validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
+					validation.StringLenBetween(1, 100),
+					validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
 				),
 			},
 		},
