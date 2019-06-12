@@ -52,8 +52,8 @@ func dataSourceAwsLexBot() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(lexNameMinLength, lexNameMaxLength),
-					validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
+					validation.StringLenBetween(1, 100),
+					validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
 				),
 			},
 			"status": {
@@ -65,8 +65,8 @@ func dataSourceAwsLexBot() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(lexVersionMinLength, lexVersionMaxLength),
-					validation.StringMatch(regexp.MustCompile(lexVersionRegex), ""),
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
 				),
 			},
 			"voice_id": {
@@ -79,16 +79,12 @@ func dataSourceAwsLexBot() *schema.Resource {
 
 func dataSourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 	botName := d.Get("name").(string)
-	botVersion := lexVersionLatest
-	if v, ok := d.GetOk("version"); ok {
-		botVersion = v.(string)
-	}
 
 	conn := meta.(*AWSClient).lexmodelconn
 
 	resp, err := conn.GetBot(&lexmodelbuildingservice.GetBotInput{
 		Name:           aws.String(botName),
-		VersionOrAlias: aws.String(botVersion),
+		VersionOrAlias: aws.String(d.Get("version").(string)),
 	})
 	if err != nil {
 		return fmt.Errorf("error getting bot %s: %s", botName, err)

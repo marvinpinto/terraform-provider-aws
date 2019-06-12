@@ -1,8 +1,6 @@
 package aws
 
 import (
-	"regexp"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -45,7 +43,7 @@ var lexMessageResource = &schema.Resource{
 		"content": {
 			Type:         schema.TypeString,
 			Required:     true,
-			ValidateFunc: validation.StringLenBetween(lexMessageContentMinLength, lexMessageContentMaxLength),
+			ValidateFunc: validation.StringLenBetween(1, 1000),
 		},
 		"content_type": {
 			Type:     schema.TypeString,
@@ -59,7 +57,7 @@ var lexMessageResource = &schema.Resource{
 		"group_number": {
 			Type:         schema.TypeInt,
 			Optional:     true,
-			ValidateFunc: validation.IntBetween(lexMessageGroupNumberMin, lexMessageGroupNumberMax),
+			ValidateFunc: validation.IntBetween(1, 5),
 		},
 	},
 }
@@ -101,14 +99,14 @@ var lexStatementResource = &schema.Resource{
 		"message": {
 			Type:     schema.TypeSet,
 			Required: true,
-			MinItems: lexStatementMessagesMin,
-			MaxItems: lexStatementMessagesMax,
+			MinItems: 1,
+			MaxItems: 15,
 			Elem:     lexMessageResource,
 		},
 		"response_card": {
 			Type:         schema.TypeString,
 			Optional:     true,
-			ValidateFunc: validation.StringLenBetween(lexResponseCardMinLength, lexResponseCardMaxLength),
+			ValidateFunc: validation.StringLenBetween(1, 50000),
 		},
 	},
 }
@@ -140,19 +138,19 @@ var lexPromptResource = &schema.Resource{
 		"max_attempts": {
 			Type:         schema.TypeInt,
 			Required:     true,
-			ValidateFunc: validation.IntBetween(lexPromptMaxAttemptsMin, lexPromptMaxAttemptsMax),
+			ValidateFunc: validation.IntBetween(1, 5),
 		},
 		"message": {
 			Type:     schema.TypeSet,
 			Required: true,
-			MinItems: lexStatementMessagesMin,
-			MaxItems: lexStatementMessagesMax,
+			MinItems: 1,
+			MaxItems: 15,
 			Elem:     lexMessageResource,
 		},
 		"response_card": {
 			Type:         schema.TypeString,
 			Optional:     true,
-			ValidateFunc: validation.StringLenBetween(lexResponseCardMinLength, lexResponseCardMaxLength),
+			ValidateFunc: validation.StringLenBetween(1, 50000),
 		},
 	},
 }
@@ -179,27 +177,6 @@ func expandLexPrompt(m map[string]interface{}) (prompt *lexmodelbuildingservice.
 	}
 
 	return
-}
-
-var lexIntentResource = &schema.Resource{
-	Schema: map[string]*schema.Schema{
-		"intent_name": {
-			Type:     schema.TypeString,
-			Required: true,
-			ValidateFunc: validation.All(
-				validation.StringLenBetween(lexNameMinLength, lexNameMaxLength),
-				validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
-			),
-		},
-		"intent_version": {
-			Type:     schema.TypeString,
-			Required: true,
-			ValidateFunc: validation.All(
-				validation.StringLenBetween(lexVersionMinLength, lexVersionMaxLength),
-				validation.StringMatch(regexp.MustCompile(lexVersionRegex), ""),
-			),
-		},
-	},
 }
 
 func flattenLexIntents(intents []*lexmodelbuildingservice.Intent) (flattenedIntents []map[string]interface{}) {

@@ -21,12 +21,12 @@ func TestAccAwsLexBot(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsLexBotDestroy(testBotID, lexVersionLatest),
+		CheckDestroy: testAccCheckAwsLexBotDestroy(testBotID, "$LATEST"),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testAccAwsLexBotConfig, testID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexBotExists(testBotID, lexVersionLatest),
+					testAccCheckAwsLexBotExists(testBotID, "$LATEST"),
 
 					// user provided attributes
 					resource.TestCheckResourceAttr(resourceName, "abort_statement.#", "1"),
