@@ -53,95 +53,53 @@ resource "aws_lex_bot" "order_flowers_bot" {
 
 The following arguments are supported:
 
-* `abort_statement` _(**Required**)_:
+* `abort_statement` - (Required) The message that Amazon Lex uses to abort a conversation. Attributes 
+are documented under [statement](#statement).
+* `child_directed` - (Required) By specifying true, you confirm that your use of Amazon Lex is related 
+to a website, program, or other application that is directed or targeted, in whole or in part, to 
+children under age 13 and subject to COPPA.
 
-	The message that Amazon Lex uses to abort a conversation. Attributes are documented under 
-  [statement](#statement)..
+By specifying false, you confirm that your use of Amazon Lex is not related to a website, program, or 
+other application that is directed or targeted, in whole or in part, to children under age 13 and 
+subject to COPPA.
 
-* `child_directed` _(**Required**)_:
-
-	By specifying true, you confirm that your use of Amazon Lex is related to a website, program,
-	or other application that is directed or targeted, in whole or in part, to children under age
-	13 and subject to COPPA.
-
-	By specifying false, you confirm that your use of Amazon Lex is not related to a website,
-	program, or other application that is directed or targeted, in whole or in part, to children
-	under age 13 and subject to COPPA.
-
-    If your use of Amazon Lex relates to a website, program, or other application that is directed
-	in whole or in part, to children under age 13, you must obtain any required verifiable
-	parental consent under COPPA. For information regarding the use of Amazon Lex in connection
-	with websites, programs, or other applications that are directed or targeted, in whole or in
-	part, to children under age 13, see the
-	[Amazon Lex FAQ](https://aws.amazon.com/lex/faqs#data-security).
-
-* `clarification_prompt` _(**Required**)_:
-
-	The message that Amazon Lex uses when it doesn't understand the user's request. Attributes 
-  are documented under [prompt](#prompt)..
-
-* `description` _(Optional)_:
-
-	A description of the bot.
-
-* `idle_session_ttl_in_seconds` _(Optional)_:
-
-	The maximum time in seconds that Amazon Lex retains the data gathered in a conversation.
-
-* `locale` _(Optional)_:
-
-	Specifies the target locale for the bot. Any intent used in the bot must be compatible with
-	the locale of the bot. *[String, values=en-US,en-GB,de-DE]*
-
-* `intent` _(**Required**)_:
-
-	A set of Intent objects. Each intent represents a command that a user can express. Attributes 
-  are documented under [intent](#intent-1)..
-
-* `name` _(**Required**)_:
-
-	The name of the bot that you want to create, case sensitive.
-
-* `process_behavior` _(Optional)_:
-
-	If you set the process_behavior element to BUILD , Amazon Lex builds the bot so that it can be
-	run. If you set the element to SAVE Amazon Lex saves the bot, but doesn't build it.
-
-* `voice_id` _(Optional)_:
-
-	The Amazon Polly voice ID that you want Amazon Lex to use for voice interactions with the
-	user. The locale configured for the voice must match the locale of the bot. For more
-	information, see [Available Voices](http://docs.aws.amazon.com/polly/latest/dg/voicelist.html)
-	in the Amazon Polly Developer Guide.
+If your use of Amazon Lex relates to a website, program, or other application that is directed in 
+whole or in part, to children under age 13, you must obtain any required verifiable parental consent 
+under COPPA. For information regarding the use of Amazon Lex in connection with websites, programs, 
+or other applications that are directed or targeted, in whole or in part, to children under age 13, 
+see the [Amazon Lex FAQ](https://aws.amazon.com/lex/faqs#data-security).
+* `clarification_prompt` - (Required) The message that Amazon Lex uses when it doesn't understand the 
+user's request. Attributes are documented under [prompt](#prompt).
+* `description` - (Optional) A description of the bot.
+* `idle_session_ttl_in_seconds` - (Optional) The maximum time in seconds that Amazon Lex retains the 
+data gathered in a conversation.
+* `locale` - (Optional) Specifies the target locale for the bot. Any intent used in the bot must be 
+compatible with the locale of the bot. *[String, values=en-US,en-GB,de-DE]*
+* `intent` - (Required) A set of Intent objects. Each intent represents a command that a user can 
+express. Attributes are documented under [intent](#intent-1)..
+* `name` - (Required) The name of the bot that you want to create, case sensitive.
+* `process_behavior` - (Optional) If you set the process_behavior element to BUILD , Amazon Lex builds 
+the bot so that it can be run. If you set the element to SAVE Amazon Lex saves the bot, but doesn't build it.
+* `voice_id` - (Optional) The Amazon Polly voice ID that you want Amazon Lex to use for voice 
+interactions with the user. The locale configured for the voice must match the locale of the bot. For 
+more information, see [Available Voices](http://docs.aws.amazon.com/polly/latest/dg/voicelist.html) 
+in the Amazon Polly Developer Guide.
 
 ### intent
 
 Identifies the specific version of an intent.
 
-* `intent_name` _(**Required**)_:
-
-    The name of the intent.
-
-* `intent_version` _(**Required**)_:
-
-    The version of the intent.
+* `intent_name` - (Required) The name of the intent.
+* `intent_version` - (Required) The version of the intent.
 
 ### message
 
 The message object that provides the message text and its type.
 
-* `content` _(**Required**)_:
-
-	  The text of the message.
-
-* `content_type` _(**Required**)_:
-
-	  The content type of the message string.
-
-* `group_number` _(Optional)_:
-
-    Identifies the message group that the message belongs to. When a group is assigned to a message,
-    Amazon Lex returns one message from each group in the response.
+* `content` - (Required) The text of the message.
+* `content_type` - (Required) The content type of the message string.
+* `group_number` - (Optional) Identifies the message group that the message belongs to. When a group 
+is assigned to a message, Amazon Lex returns one message from each group in the response.
 
 ### prompt
 
@@ -149,38 +107,25 @@ Obtains information from the user. To define a prompt, provide one or more messa
 number of attempts to get information from the user. If you provide more than one message, Amazon
 Lex chooses one of the messages to use to prompt the user.
 
-* `max_attempts` _(**Required**)_:
-
-    The number of times to prompt the user for information.
-
-* `message` _(**Required**)_:
-
-    A set of messages, each of which provides a message string and its type. You can specify the
-	  message string in plain text or in Speech Synthesis Markup Language (SSML). Attributes are 
-    documented under [message](#message-2).
-
-* `response_card` _(Optional)_:
-
-    The response card. Amazon Lex will substitute session attributes and slot values into the
-    response card. For more information, see 
-    [Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html).
+* `max_attempts` - (Required) The number of times to prompt the user for information.
+* `message` - (Required) A set of messages, each of which provides a message string and its type. 
+You can specify the message string in plain text or in Speech Synthesis Markup Language (SSML). 
+Attributes are documented under [message](#message-2).
+* `response_card` - (Optional) The response card. Amazon Lex will substitute session attributes and 
+slot values into the response card. For more information, see 
+[Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html).
 
 ### statement
 
 A statement is a map with a set of message maps and an optional response card string. Messages
 convey information to the user. At runtime, Amazon Lex selects the message to convey.
 
-* `message` _(**Required**)_:
-
-    A set of messages, each of which provides a message string and its type. You can specify the 
-    message string in plain text or in Speech Synthesis Markup Language (SSML). Attributes are 
-    documented under [message](#message-2).
-
-* `response_card` _(Optional)_:
-
-    The response card. Amazon Lex will substitute session attributes and slot values into the
-    response card. For more information, see
-    [Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html).
+* `message` - (Required) A set of messages, each of which provides a message string and its type. You 
+can specify the message string in plain text or in Speech Synthesis Markup Language (SSML). Attributes 
+are documented under [message](#message-2).
+* `response_card` - (Optional) The response card. Amazon Lex will substitute session attributes and 
+slot values into the response card. For more information, see
+[Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html).
 
 ### Timeouts
 
@@ -193,33 +138,16 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 The following attributes are exported in addition to the arguments listed above:
 
-* `checksum`
-
-	Checksum identifying the version of the bot that was created. The checksum is not included as
-	an argument because the resource will add it automatically when updating the bot.
-
-* `created_date`
-
-	The date when the bot version was created.
-
-* `failure_reason`
-
-	If status is FAILED, Amazon Lex provides the reason that it failed to build the bot.
-
-* `last_updated_date`
-
-	The date when the $LATEST version of this bot was updated.
-
-* `status` _(Values: BUILDING | READY | FAILED | NOT_BUILT)_:
-
-	When you send a request to create or update a bot, Amazon Lex sets the status response element
-	to BUILDING. After Amazon Lex builds the bot, it sets status to READY. If Amazon Lex can't
-	build the bot, it sets status to FAILED. Amazon Lex returns the reason for the failure in the
-	failure_reason response element.
-
-* `version`
-
-	The version of the bot.
+* `checksum` - Checksum identifying the version of the bot that was created. The checksum is not 
+included as an argument because the resource will add it automatically when updating the bot.
+* `created_date` - The date when the bot version was created.
+* `failure_reason` - If status is FAILED, Amazon Lex provides the reason that it failed to build the bot.
+* `last_updated_date` - The date when the $LATEST version of this bot was updated.
+* `status` - When you send a request to create or update a bot, Amazon Lex sets the status response 
+element to BUILDING. After Amazon Lex builds the bot, it sets status to READY. If Amazon Lex can't 
+build the bot, it sets status to FAILED. Amazon Lex returns the reason for the failure in the 
+failure_reason response element.
+* `version` - The version of the bot.
 
 ## Import
 

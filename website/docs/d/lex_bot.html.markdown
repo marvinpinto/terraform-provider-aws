@@ -23,13 +23,8 @@ data "aws_lex_bot" "order_flowers_bot" {
 
 The following arguments are supported:
 
-* `name` _(**Required**)_:
-
-    The name of the bot. The name is case sensitive.
-
-* `version` _(Optional)_:
-
-    The version or alias of the bot.
+* `name` - (Required) The name of the bot. The name is case sensitive.
+* `version` - (Optional) The version or alias of the bot.
 
 ## Attributes Reference
 
