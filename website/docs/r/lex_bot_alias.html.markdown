@@ -26,21 +26,10 @@ resource "aws_lex_bot_alias" "order_flowers_prod" {
 
 The following arguments are supported:
 
-* `bot_name` _(**Required**)_:
-
-	The name of the bot.
-
-* `bot_version` _(**Required**)_:
-
-	The name of the bot.
-
-* `description` _(Optional)_:
-
-	A description of the alias.
-
-* `name` _(**Required**)_:
-
-	The name of the alias. The name is not case sensitive.
+* `bot_name` - (Required) The name of the bot.
+* `bot_version` - (Required) The name of the bot.
+* `description` - (Optional) A description of the alias.
+* `name` - (Required) The name of the alias. The name is not case sensitive.
 
 ### Timeouts
 
@@ -53,19 +42,11 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 The following attributes are exported in addition to the arguments listed above:
 
-* `checksum`
-
-	The checksum for the current version of the alias. Note: The checksum is not included as an
-	argument because the resource will add it automatically when updating the bot alias.
-
-* `created_date`
-
-	The date that the bot alias was created.
-
-* `last_updated_date`
-
-	The date that the bot alias was updated. When you create a resource, the creation date and the
-	last updated date are the same.
+* `checksum` - The checksum for the current version of the alias. Note: The checksum is not included 
+as an argument because the resource will add it automatically when updating the bot alias.
+* `created_date` - The date that the bot alias was created.
+* `last_updated_date` - The date that the bot alias was updated. When you create a resource, the 
+creation date and the last updated date are the same.
 
 ## Import
 
