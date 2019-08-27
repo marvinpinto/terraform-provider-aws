@@ -17,33 +17,6 @@ import (
 // value pairs and not complex or mixed types. That is why these resources are defined using the
 // schema.TypeList and a max of 1 item instead of the schema.TypeMap.
 
-// Convert a slice of items to a map[string]interface{}
-// Expects input as a single item slice.
-// Required because we use TypeList instead of TypeMap due to TypeMap not supporting nested and mixed complex values.
-func expandLexObject(v interface{}) map[string]interface{} {
-	return v.([]interface{})[0].(map[string]interface{})
-}
-
-// Covert a map[string]interface{} to a slice of items
-// Expects a single map[string]interface{}
-// Required because we use TypeList instead of TypeMap due to TypeMap not supporting nested and mixed complex values.
-func flattenLexObject(m map[string]interface{}) []map[string]interface{} {
-	return []map[string]interface{}{m}
-}
-
-func expandLexSet(s *schema.Set) (items []map[string]interface{}) {
-	for _, rawItem := range s.List() {
-		item, ok := rawItem.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		items = append(items, item)
-	}
-
-	return
-}
-
 var lexMessageResource = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"content": {
@@ -83,21 +56,28 @@ func flattenLexMessages(messages []*lexmodelbuildingservice.Message) (flattenedM
 // Expects a slice of maps representing the Lex objects.
 // The value passed into this function should have been run through the expandLexSet function.
 // Example: []map[content: test content_type: PlainText group_number: 1]
-func expandLexMessages(rawValues []map[string]interface{}) (messages []*lexmodelbuildingservice.Message) {
+func expandLexMessages(rawValues []interface{}) []*lexmodelbuildingservice.Message {
+	messages := make([]*lexmodelbuildingservice.Message, 0, len(rawValues))
+
 	for _, rawValue := range rawValues {
-		message := &lexmodelbuildingservice.Message{
-			Content:     aws.String(rawValue["content"].(string)),
-			ContentType: aws.String(rawValue["content_type"].(string)),
+		value, ok := rawValue.(map[string]interface{})
+		if !ok {
+			continue
 		}
 
-		if v, ok := rawValue["group_number"]; ok && v != 0 {
+		message := &lexmodelbuildingservice.Message{
+			Content:     aws.String(value["content"].(string)),
+			ContentType: aws.String(value["content_type"].(string)),
+		}
+
+		if v, ok := value["group_number"]; ok && v != 0 {
 			message.GroupNumber = aws.Int64(int64(v.(int)))
 		}
 
 		messages = append(messages, message)
 	}
 
-	return
+	return messages
 }
 
 var lexStatementResource = &schema.Resource{
@@ -128,9 +108,11 @@ func flattenLexStatement(statement *lexmodelbuildingservice.Statement) (flattene
 	return
 }
 
-func expandLexStatement(m map[string]interface{}) (statement *lexmodelbuildingservice.Statement) {
+func expandLexStatement(rawObject interface{}) (statement *lexmodelbuildingservice.Statement) {
+	m := rawObject.([]interface{})[0].(map[string]interface{})
+
 	statement = &lexmodelbuildingservice.Statement{}
-	statement.Messages = expandLexMessages(expandLexSet(m["message"].(*schema.Set)))
+	statement.Messages = expandLexMessages(m["message"].(*schema.Set).List())
 
 	if v, ok := m["response_card"]; ok && v != "" {
 		statement.ResponseCard = aws.String(v.(string))
@@ -173,10 +155,12 @@ func flattenLexPrompt(prompt *lexmodelbuildingservice.Prompt) (flattened map[str
 	return
 }
 
-func expandLexPrompt(m map[string]interface{}) (prompt *lexmodelbuildingservice.Prompt) {
+func expandLexPrompt(rawObject interface{}) (prompt *lexmodelbuildingservice.Prompt) {
+	m := rawObject.([]interface{})[0].(map[string]interface{})
+
 	prompt = &lexmodelbuildingservice.Prompt{}
 	prompt.MaxAttempts = aws.Int64(int64(m["max_attempts"].(int)))
-	prompt.Messages = expandLexMessages(expandLexSet(m["message"].(*schema.Set)))
+	prompt.Messages = expandLexMessages(m["message"].(*schema.Set).List())
 
 	if v, ok := m["response_card"]; ok && v != "" {
 		prompt.ResponseCard = aws.String(v.(string))
@@ -199,15 +183,22 @@ func flattenLexIntents(intents []*lexmodelbuildingservice.Intent) (flattenedInte
 // Expects a slice of maps representing the Lex objects.
 // The value passed into this function should have been run through the expandLexSet function.
 // Example: []map[intent_name: OrderFlowers intent_version: $LATEST]
-func expandLexIntents(rawValues []map[string]interface{}) (intents []*lexmodelbuildingservice.Intent) {
+func expandLexIntents(rawValues []interface{}) []*lexmodelbuildingservice.Intent {
+	intents := make([]*lexmodelbuildingservice.Intent, 0, len(rawValues))
+
 	for _, rawValue := range rawValues {
+		value, ok := rawValue.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
 		intents = append(intents, &lexmodelbuildingservice.Intent{
-			IntentName:    aws.String(rawValue["intent_name"].(string)),
-			IntentVersion: aws.String(rawValue["intent_version"].(string)),
+			IntentName:    aws.String(value["intent_name"].(string)),
+			IntentVersion: aws.String(value["intent_version"].(string)),
 		})
 	}
 
-	return
+	return intents
 }
 
 func resourceAwsLexBot() *schema.Resource {
@@ -346,11 +337,11 @@ func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	input := &lexmodelbuildingservice.PutBotInput{
-		AbortStatement:          expandLexStatement(expandLexObject(d.Get("abort_statement"))),
+		AbortStatement:          expandLexStatement(d.Get("abort_statement")),
 		ChildDirected:           aws.Bool(d.Get("child_directed").(bool)),
-		ClarificationPrompt:     expandLexPrompt(expandLexObject(d.Get("clarification_prompt"))),
+		ClarificationPrompt:     expandLexPrompt(d.Get("clarification_prompt")),
 		IdleSessionTTLInSeconds: aws.Int64(int64(d.Get("idle_session_ttl_in_seconds").(int))),
-		Intents:                 expandLexIntents(expandLexSet(d.Get("intent").(*schema.Set))),
+		Intents:                 expandLexIntents(d.Get("intent").(*schema.Set).List()),
 		Locale:                  aws.String(d.Get("locale").(string)),
 		Name:                    aws.String(name),
 		ProcessBehavior:         aws.String(d.Get("process_behavior").(string)),
@@ -396,10 +387,10 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 		processBehavior = v.(string)
 	}
 
-	d.Set("abort_statement", flattenLexObject(flattenLexStatement(resp.AbortStatement)))
+	d.Set("abort_statement", flattenLexStatement(resp.AbortStatement))
 	d.Set("checksum", resp.Checksum)
 	d.Set("child_directed", resp.ChildDirected)
-	d.Set("clarification_prompt", flattenLexObject(flattenLexPrompt(resp.ClarificationPrompt)))
+	d.Set("clarification_prompt", flattenLexPrompt(resp.ClarificationPrompt))
 	d.Set("description", resp.Description)
 	d.Set("failure_reason", resp.FailureReason)
 	d.Set("idle_session_ttl_in_seconds", resp.IdleSessionTTLInSeconds)
@@ -421,12 +412,12 @@ func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lexmodelconn
 
 	input := &lexmodelbuildingservice.PutBotInput{
-		AbortStatement:          expandLexStatement(expandLexObject(d.Get("abort_statement"))),
+		AbortStatement:          expandLexStatement(d.Get("abort_statement")),
 		Checksum:                aws.String(d.Get("checksum").(string)),
 		ChildDirected:           aws.Bool(d.Get("child_directed").(bool)),
-		ClarificationPrompt:     expandLexPrompt(expandLexObject(d.Get("clarification_prompt"))),
+		ClarificationPrompt:     expandLexPrompt(d.Get("clarification_prompt")),
 		IdleSessionTTLInSeconds: aws.Int64(int64(d.Get("idle_session_ttl_in_seconds").(int))),
-		Intents:                 expandLexIntents(expandLexSet(d.Get("intent").(*schema.Set))),
+		Intents:                 expandLexIntents(d.Get("intent").(*schema.Set).List()),
 		Locale:                  aws.String(d.Get("locale").(string)),
 		Name:                    aws.String(d.Id()),
 		ProcessBehavior:         aws.String(d.Get("process_behavior").(string)),
