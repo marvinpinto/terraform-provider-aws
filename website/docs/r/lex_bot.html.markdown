@@ -33,8 +33,8 @@ resource "aws_lex_bot" "order_flowers_bot" {
     }
   }
 
-  description = "Bot to order flowers on the behalf of a user"
-
+  create_version              = false
+  description                 = "Bot to order flowers on the behalf of a user"
   idle_session_ttl_in_seconds = 600
 
   intent {
@@ -70,6 +70,7 @@ or other applications that are directed or targeted, in whole or in part, to chi
 see the [Amazon Lex FAQ](https://aws.amazon.com/lex/faqs#data-security).
 * `clarification_prompt` - (Required) The message that Amazon Lex uses when it doesn't understand the 
 user's request. Attributes are documented under [prompt](#prompt).
+* `create_version` - (Optional) Determines if a new bot version is created when the initial resource is created and on each update. Defaults to true.
 * `description` - (Optional) A description of the bot.
 * `idle_session_ttl_in_seconds` - (Optional) The maximum time in seconds that Amazon Lex retains the 
 data gathered in a conversation.

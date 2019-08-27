@@ -210,8 +210,9 @@ func resourceAwsLexBot() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				// The version is not required for import but it is required for the get request.
-				d.Set("version", "$LATEST")
+				if _, ok := d.GetOk("create_version"); !ok {
+					d.Set("create_version", true)
+				}
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -243,6 +244,11 @@ func resourceAwsLexBot() *schema.Resource {
 				MinItems: 1,
 				MaxItems: 1,
 				Elem:     lexPromptResource,
+			},
+			"create_version": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -316,12 +322,7 @@ func resourceAwsLexBot() *schema.Resource {
 			},
 			"version": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "$LATEST",
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
-				),
+				Computed: true,
 			},
 			"voice_id": {
 				Type:     schema.TypeString,
@@ -340,6 +341,7 @@ func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 		AbortStatement:          expandLexStatement(d.Get("abort_statement")),
 		ChildDirected:           aws.Bool(d.Get("child_directed").(bool)),
 		ClarificationPrompt:     expandLexPrompt(d.Get("clarification_prompt")),
+		CreateVersion:           aws.Bool(d.Get("create_version").(bool)),
 		IdleSessionTTLInSeconds: aws.Int64(int64(d.Get("idle_session_ttl_in_seconds").(int))),
 		Intents:                 expandLexIntents(d.Get("intent").(*schema.Set).List()),
 		Locale:                  aws.String(d.Get("locale").(string)),
@@ -369,7 +371,7 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetBot(&lexmodelbuildingservice.GetBotInput{
 		Name:           aws.String(d.Id()),
-		VersionOrAlias: aws.String(d.Get("version").(string)),
+		VersionOrAlias: aws.String("$LATEST"),
 	})
 	if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Bot (%s) not found, removing from state", d.Id())
@@ -399,7 +401,7 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.Name)
 	d.Set("process_behavior", processBehavior)
 	d.Set("status", resp.Status)
-	d.Set("version", resp.Version)
+	d.Set("version", "$LATEST")
 
 	if resp.VoiceId != nil {
 		d.Set("voice_id", resp.VoiceId)
@@ -416,15 +418,13 @@ func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 		Checksum:                aws.String(d.Get("checksum").(string)),
 		ChildDirected:           aws.Bool(d.Get("child_directed").(bool)),
 		ClarificationPrompt:     expandLexPrompt(d.Get("clarification_prompt")),
+		CreateVersion:           aws.Bool(d.Get("create_version").(bool)),
+		Description:             aws.String(d.Get("description").(string)),
 		IdleSessionTTLInSeconds: aws.Int64(int64(d.Get("idle_session_ttl_in_seconds").(int))),
 		Intents:                 expandLexIntents(d.Get("intent").(*schema.Set).List()),
 		Locale:                  aws.String(d.Get("locale").(string)),
 		Name:                    aws.String(d.Id()),
 		ProcessBehavior:         aws.String(d.Get("process_behavior").(string)),
-	}
-
-	if v, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("voice_id"); ok {
